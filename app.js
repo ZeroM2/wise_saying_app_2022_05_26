@@ -18,15 +18,13 @@ app.use(express.json());
 const port = 3000;
 
 app.get("/ws", async (req, res) => {
-  const { id } = req.params;
   const [[saying_dateRow]] = await pool.query(
     `
     SELECT *
     FROM ws
     ORDER BY RAND()
     LIMIT 1
-    `,
-    [id]
+    `
   );
 
   if (saying_dateRow === undefined) {
@@ -36,6 +34,17 @@ app.get("/ws", async (req, res) => {
     });
     return;
   }
+
+  saying_dateRow.hit++;
+  await pool.query(
+    `
+    UPDATE ws
+    SET hit = ?
+    WHERE id = ?
+    `,
+    [saying_dateRow.hit, saying_dateRow.id]
+  );
+
   res.json({
     resultCode: "S-1",
     msg: "성공",
@@ -44,5 +53,5 @@ app.get("/ws", async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`example app listening on port ${port}`);
+  console.log(`wise_saying app listening on port ${port}`);
 });
